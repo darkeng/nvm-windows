@@ -749,8 +749,21 @@ func install(version string, cpuarch string) {
 				}
 				defer os.RemoveAll(tempDir)
 
+				sourceZip := filepath.Join(root, "temp", "npm-v"+npmv+".zip")
+				targetZip := filepath.Join(tempDir, "npm-v"+npmv+".zip")
+
+				if !file.Exists(sourceZip) {
+					status <- Status{Err: fmt.Errorf("Failed to locate npm archive %s", sourceZip)}
+					return
+				}
+
+				if err = utility.Rename(sourceZip, targetZip); err != nil {
+					status <- Status{Err: fmt.Errorf("Unable to stage npm archive: %v", err)}
+					return
+				}
+
 				// Extract npm to the temp directory
-				err = file.Unzip(filepath.Join(tempDir, "npm-v"+npmv+".zip"), filepath.Join(tempDir, "nvm-npm"))
+				err = file.Unzip(targetZip, filepath.Join(tempDir, "nvm-npm"))
 				if err != nil {
 					status <- Status{Err: err}
 				}
